@@ -1,3 +1,13 @@
+"""
+projekt3.py: třetí projekt do Engeto Online Python Akademie
+
+author: Jozef Drga
+email: dodo.tn@seznam.cz
+"""
+
+
+
+
 import requests
 from bs4 import BeautifulSoup
 import csv
