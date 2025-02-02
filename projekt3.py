@@ -12,6 +12,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import sys
+import re
 
 def get_municipality_links(url: str) -> list:
     """Discover the links to municipality from page of district."""
@@ -26,7 +27,12 @@ def get_municipality_links(url: str) -> list:
         link_to_add = 'https://www.volby.cz/pls/ps2017nss/' + link['href']
         if link_to_add not in municipality_links:
             municipality_links.append(link_to_add)
+            
     return municipality_links
+
+def is_valid_url(url: str) -> bool:
+    """Detect invalid url."""
+    return re.match(r'^(http|https)://', url) is not None
 
 def scrape_election_data(municipality_links: list, output_file: str) -> None:
     """Scrape election data from a list of municipality links and save to CSV."""
@@ -42,18 +48,18 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
             response.raise_for_status()
             municipality_soup = BeautifulSoup(response.text, 'html.parser')
 
-            # 🔹 Skúsime rôzne spôsoby získania názvu obce
+           
             name_tag = None
-            name_tags = municipality_soup.find_all('h3')  # Skúsime H3 (názvy obcí)
+            name_tags = municipality_soup.find_all('h3')  
             if name_tags is not None:
-                name_tags = list(name_tags)  # list of all found
+                name_tags = list(name_tags)  
                 if len(name_tags) > 2:
                     name_tag = name_tags[2]
                     
             
             if not name_tag:
-                print(f"⚠️ Upozornenie: Názov obce sa nenašiel pre {municipality_url}")
-                print(f"🔍 Výpis HTML časti:\n{municipality_soup.prettify()[:1000]}\n")  # Pomôže s debugom
+                print(f"Upozornenie: Názov obce sa nenašiel pre {municipality_url}")
+                print(f"Výpis HTML časti:\n{municipality_soup.prettify()[:1000]}\n")  # Pomôže s debugom
                 name = "Neznámá obec"
             else:
                 name = name_tag.text.strip()
@@ -87,8 +93,8 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
                 temp_results.append(row_data)
 
         except Exception as e:
-            print(f"❌ Chyba pri spracovaní obce: {municipality_url}")
-            print(f"💡 Detail chyby: {e}")
+            print(f"Chyba pri spracovaní obce: {municipality_url}")
+            print(f"Detail chyby: {e}")
             continue
 
     # 🔹 Usporiadame hlavičku
@@ -116,12 +122,19 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
 
     print(f"Údaje boli uložené do súboru {output_file}.")
 
-# Spustenie programu s parametrami zo vstupu
+#
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Použitie: python script.py <url_okresu> <output_file>")
-    else:
-        url = sys.argv[1]
-        output_file = sys.argv[2]
-        municipality_links = get_municipality_links(url)
-        scrape_election_data(municipality_links, output_file)
+        print("📌 Použitie: python projekt3.py <url_okresu> <output_file>")
+        sys.exit(1)  # Ukončí program s chybovým kódom
+
+    url = sys.argv[1]
+    output_file = sys.argv[2]
+
+  
+    if not is_valid_url(url):
+        print(f" Chyba: '{url}' nie je platná URL adresa. Program sa ukončuje.")
+        sys.exit(1)  #
+
+    municipality_links = get_municipality_links(url)
+    scrape_election_data(municipality_links, output_file)
