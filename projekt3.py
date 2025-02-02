@@ -4,7 +4,7 @@ import csv
 import sys
 
 def get_municipality_links(url: str) -> list:
-    """Získa odkazy na obce z hlavnej stránky volebného okrsku."""
+    """Discover the links to municipality from page of district."""
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
@@ -47,7 +47,7 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
                 name = "Neznámá obec"
             else:
                 name = name_tag.text.strip()
-                print(f"✅ DEBUG - Zistený názov obce: {name}")
+                print(f" DEBUG - Zistený názov obce: {name}")
 
             # 🔹 Oprava získavania základných údajov
             basic_data_table = municipality_soup.find('table', {'class': 'table'})
@@ -95,7 +95,7 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
             row.get('Platné hlasy', '')
         ] + [row.get(party, '0') for party in sorted_party_names]  
 
-        print(f"✅ DEBUG - Správne uložený riadok: {sorted_row}")  
+        print(f"DEBUG - Správne uložený riadok: {sorted_row}")  
         all_data.append(sorted_row)
 
     # 🔹 Uloženie do CSV
@@ -104,12 +104,12 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
         writer.writerow(header)  
         writer.writerows(all_data)  
 
-    print(f"📂 Údaje boli uložené do súboru {output_file}.")
+    print(f"Údaje boli uložené do súboru {output_file}.")
 
 # Spustenie programu s parametrami zo vstupu
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("📌 Použitie: python script.py <url_okresu> <output_file>")
+        print("Použitie: python script.py <url_okresu> <output_file>")
     else:
         url = sys.argv[1]
         output_file = sys.argv[2]
