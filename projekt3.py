@@ -11,6 +11,7 @@ import csv
 import sys
 import re
 
+
 def get_municipality_links(url: str) -> list:
     """Získa odkazy na obce z okresnej stránky."""
     try:
@@ -37,9 +38,9 @@ def get_municipality_links(url: str) -> list:
     print(f"DEBUG - Nájdené odkazy na obce: {len(municipality_links)}")
     if municipality_links:
         print(f"Prvý odkaz: {municipality_links[0]}")
-    
 
     return municipality_links
+
 
 def get_municipality_data(municipality_url: str) -> dict:
     """Extrahuje údaje o konkrétnej obci."""
@@ -123,20 +124,24 @@ def clean_number(value: str) -> str:
     return value.strip().replace('\xa0', '').replace(' ', '')
 
 
-def scrape_election_data(municipality_links: list, output_file: str) -> None:
-    """Spracuje volebné dáta a uloží do CSV."""
+def scrape_election_data(municipality_links: list) -> dict:
+    """Spracuje volebné dáta a vráti v slovníku. """
     all_data = []
     party_names = set()
 
-    #  Získanie údajov pre každú obec
+    # Získanie údajov pre každú obec
     for municipality_url in municipality_links:
-        print(f"🔹 Spracovávam obec: {municipality_url}")
+        print(f" Spracovávam obec: {municipality_url}")
         municipality_data = get_municipality_data(municipality_url)
         
         if municipality_data:
             all_data.append(municipality_data)
             party_names.update(municipality_data.keys() - {'Kód obce', 'Názov obce', 'Voliči v zozname', 'Odovzdane obalky', 'Platné hlasy'})
+    
+    return party_names, all_data
 
+
+def save_election_data(party_names: dict, municipality_data: list, output_file: str) -> dict:
     #  Usporiadanie stĺpcov v CSV
     sorted_party_names = sorted(party_names)
     header = ['Kód obce', 'Názov obce', 'Voliči v zozname', 'Odovzdane obalky', 'Platné hlasy'] + sorted_party_names
@@ -146,7 +151,7 @@ def scrape_election_data(municipality_links: list, output_file: str) -> None:
         writer = csv.writer(file, delimiter=',')
         writer.writerow(header)
         
-        for row in all_data:
+        for row in municipality_data:
             sorted_row = [
                 row.get('Kód obce', ''),
                 row.get('Názov obce', ''),
@@ -169,18 +174,14 @@ if __name__ == "__main__":
     output_file = sys.argv[2]
 
     if not re.match(r'^(http|https)://', url):
-        print("❌ Chybný URL formát. Prosím, zadajte platnú URL.")
+        print(" Chybný URL formát. Prosím, zadajte platnú URL.")
         sys.exit(1)
 
     municipality_links = get_municipality_links(url)
 
     if not municipality_links:
-        print("❌ Neboli nájdené žiadne odkazy na obce.")
+        print(" Neboli nájdené žiadne odkazy na obce.")
         sys.exit(1)
 
-    scrape_election_data(municipality_links, output_file)
-
-
-
-
-  
+    parties, db = scrape_election_data(municipality_links)
+    save_election_data(parties, db, output_file)
