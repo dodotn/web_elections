@@ -124,8 +124,8 @@ def clean_number(value: str) -> str:
     return value.strip().replace('\xa0', '').replace(' ', '')
 
 
-def scrape_election_data(municipality_links: list) -> dict:
-    """Spracuje volebné dáta a vráti v slovníku. """
+def scrape_election_data(municipality_links: list) -> tuple:
+    """Spracuje volebné dáta a vráti. """
     all_data = []
     party_names = set()
 
